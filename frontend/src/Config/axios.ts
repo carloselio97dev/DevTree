@@ -1,7 +1,9 @@
 import axios from "axios";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+
 const api= axios.create({
-    baseURL:import.meta.env.VITE_API_URL
+    baseURL:API_URL
 })
 
 api.interceptors.request.use((config)=>{
@@ -12,6 +14,7 @@ api.interceptors.request.use((config)=>{
      
      return config;
 })
-
+// Para depuración - eliminar en producción
+console.log('API URL configurada:', API_URL);
 
 export default api;
