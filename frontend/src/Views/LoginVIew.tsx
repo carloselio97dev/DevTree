@@ -2,14 +2,13 @@ import { useForm } from "react-hook-form"
 import { Link , useNavigate } from "react-router-dom"
 import { ErrorMessage } from "../Components/ErrorMessage"
 import type { LoginForm } from "../Types"
-import api from "../Config/axios"
-import { isAxiosError } from "axios"
+import { useMutation } from "@tanstack/react-query"
 import { toast } from "sonner"
+import { handleLogin } from "../api/DevTreeAPI"
 
 export const LoginVIew = () => {
 
   const navigate = useNavigate();
-
   const initialValues:LoginForm = {
     email: '',
     password: ''
@@ -17,28 +16,24 @@ export const LoginVIew = () => {
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({ defaultValues: initialValues })
 
-  const handleLogin = async (formData:LoginForm) =>{
-    try {
-      const { data } = await api.post(`/auth/login`, formData)
-       localStorage.setItem('AUTH_TOKEN',data);
-       navigate('/admin');
-       
-    } catch (error) {
-      if (isAxiosError(error) && error.response) {
-         toast.error(error.response.data.error);
-      }
-    }
-  }
-
-
-
+  const loginViewMutation= useMutation({
+        mutationFn:handleLogin,
+        onError:(error)=>{
+          toast.error(error.message)
+        },
+        onSuccess:(data)=>{
+          toast.success(data);
+          localStorage.setItem('AUTH_TOKEN',data)
+          navigate('/admin');
+        }
+  })
 
   return (
     <>
       <h1 className="text-4xl text-white font-bold">Inciar Sesion</h1>
 
       <form
-        onSubmit={handleSubmit(handleLogin)}
+        onSubmit={handleSubmit((data)=> loginViewMutation.mutate(data))}
         className="bg-white px-5 py-20 rounded-lg space-y-10 mt-10"
         noValidate
       >

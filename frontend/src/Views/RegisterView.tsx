@@ -1,14 +1,15 @@
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useForm } from "react-hook-form"
-import  { isAxiosError } from "axios";
 import type { RegisterForm } from "../Types";
 import {  toast} from 'sonner'
 import { ErrorMessage } from "../Components/ErrorMessage";
-import api from "../Config/axios";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { handleRegister } from "../api/DevTreeAPI";
 
 
 export const RegisterView = () => {
 
+  const queryClient= useQueryClient();
   const location= useLocation();
   const navigate= useNavigate();
 
@@ -23,25 +24,27 @@ export const RegisterView = () => {
 
   const { register, watch, reset, handleSubmit, formState: { errors } } = useForm<RegisterForm>({ defaultValues: initialValues });
   const password = watch('password');
-  const handleRegister = async (formData: RegisterForm) => {
-    try {
-      const { data } = await api.post(`/auth/register`, formData)
-        toast.success(data.msg);
-        reset();
-        navigate('/auth/login')
-    } catch (error) {
-      if (isAxiosError(error) && error.response) {
-         toast.error(error.response.data.error);
-      }
-    }
-  }
+
+  const registerViewMutation= useMutation({
+        mutationFn:handleRegister,
+        onError:(error)=>{
+          toast.error(error.message);
+        },
+        onSuccess:(data)=>{
+          toast.success(data.msg);
+          reset();
+          navigate('/auth/login')
+          queryClient.invalidateQueries({queryKey:['user']})
+        }
+    })
+
 
 
   return (
     <>
       <h1 className="text-4xl text-white font-bold">Crear Cuenta</h1>
       <form
-        onSubmit={handleSubmit(handleRegister)}
+        onSubmit={handleSubmit((data)=>registerViewMutation.mutate(data))}
         className="bg-white px-5 py-20 rounded-lg space-y-10 mt-10"
       >
         <div className="grid grid-cols-1 space-y-3">

@@ -1,6 +1,6 @@
 import { isAxiosError } from 'axios';
 import api from '../Config/axios';
-import {  User, UserHandle } from '../Types';
+import {  LoginForm, RegisterForm, User, UserHandle } from '../Types';
 
 
 export async function getUser() {
@@ -69,3 +69,28 @@ export async function searchByHandle(handle:string) {
         }
     }
 }
+
+export async function handleRegister(formData:RegisterForm){
+        try {
+            const {data} = await api.post(`/auth/register`, formData)
+            return data;
+        } catch (error) {
+            if(isAxiosError(error) && error.response){
+                throw new   Error(error.response.data.error);
+                
+            } 
+        }
+}
+
+
+export async function handleLogin(formData:LoginForm){
+    try {
+      const { data } = await api.post(`/auth/login`, formData)
+      return data;
+     
+    } catch (error) {
+      if (isAxiosError(error) && error.response) {
+        throw new   Error(error.response.data.error);
+      }
+    }
+  }
